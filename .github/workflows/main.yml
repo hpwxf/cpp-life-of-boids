@@ -27,7 +27,7 @@ env:
   DEBUG_CI: true
 
 jobs:
-  build:
+  unix:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -95,7 +95,7 @@ jobs:
 
       - name: build
         shell: bash
-        run: .ci/build.sh
+        run: .ci/build-unix.sh
 
       - name: test
         shell: bash
@@ -108,3 +108,31 @@ jobs:
           lcov --list coverage.info
           coveralls-lcov coverage.info
         if: matrix.enable_coverage == 'on'
+
+
+  build-windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Define local variables
+        shell: bash
+        run: |
+          echo "MODE=${{matrix.mode}}"                           >> $GITHUB_ENV
+      - name: install
+        shell: bash
+        run: .ci/install.sh
+      - name: info
+        shell: bash
+        run: .ci/info.sh
+      - name: build
+        shell: bash
+        run: .ci/build-windows.sh
+      - name: test
+        shell: bash
+        run: .ci/test.sh
