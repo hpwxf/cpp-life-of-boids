@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <chrono>
 #include <random>
 
 using vec2 = std::array<float, 2>;
