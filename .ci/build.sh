@@ -38,7 +38,8 @@ case "$COMPILER" in
     # initially was only for clang ≥ 7
     # CXXFLAGS="-stdlib=libc++"
     ;;
-  "")
+  msvc)
+    EXTRA_CMAKE_OPTIONS="${EXTRA_CMAKE_OPTIONS} -DCMAKE_GENERATOR_PLATFORM=x64"
     # not defined: use default configuration
     ;;
   *)
@@ -55,7 +56,6 @@ cd build
 # /!\ use profile defined above 
 conan install ..
 cmake \
-  -G "Unix Makefiles" \
   -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
   -DCMAKE_BUILD_TYPE="${MODE}" \
   -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \

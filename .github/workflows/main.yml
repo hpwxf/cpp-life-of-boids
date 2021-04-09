@@ -42,9 +42,10 @@ jobs:
             os: macOS-10.15
             mode: Debug
             compiler: apple-clang
-#          - name: "Windows Debug"
-#            os: windows-2019
-#            mode: Debug
+          - name: "Windows Debug"
+            os: windows-2019
+            mode: Debug
+            compiler: msvc
 #          - name: "Coverage mode"
 #            os: ubuntu-20.04
 #            mode: Debug
@@ -95,7 +96,7 @@ jobs:
 
       - name: build
         shell: bash
-        run: .ci/build-unix.sh
+        run: .ci/build.sh
 
       - name: test
         shell: bash
@@ -109,34 +110,3 @@ jobs:
           coveralls-lcov coverage.info
         if: matrix.enable_coverage == 'on'
 
-
-  build-windows:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: "Windows Debug"
-            os: windows-latest
-            mode: Debug
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Define local variables
-        shell: bash
-        run: |
-          echo "MODE=${{matrix.mode}}"                           >> $GITHUB_ENV
-      - name: install
-        shell: bash
-        run: .ci/install.sh
-      - name: info
-        shell: bash
-        run: .ci/info.sh
-      - name: build
-        shell: bash
-        run: .ci/build-windows.sh
-      - name: test
-        shell: bash
-        run: .ci/test.sh

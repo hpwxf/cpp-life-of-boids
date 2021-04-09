@@ -14,24 +14,9 @@ if [[ "$ENABLE_COVERAGE" == "on" ]] && [[ "$ENABLE_MEMCHECK" == "on" ]]; then
   exit 1
 fi
 
-ARCH=$(uname -s)
-case $ARCH in
-  Linux|Darwin)
-    SUDO=sudo
-    ;;
-  MSYS_NT*|MINGW64_NT*) # Windows
-    SUDO=
-    ;;
-  *)
-    echo "Unknown OS [$ARCH]"
-    exit 1
-    ;;
-esac
-
-
 if (! command -v conan >/dev/null 2>&1 ); then
   # install conan if not already installed
-  ${SUDO} pip3 install wheel setuptools
-  ${SUDO} pip3 install conan
-  # ${SUDO} ln -s ~/.local/bin/conan /usr/local/bin/conan
+  pip3 install wheel setuptools
+  pip3 install conan
+  # ln -s ~/.local/bin/conan /usr/local/bin/conan
 fi
