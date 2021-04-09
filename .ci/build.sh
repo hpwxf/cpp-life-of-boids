@@ -52,8 +52,8 @@ conan profile update settings.build_type="${MODE}" default
 
 mkdir -p build
 cd build
-# /!\ warning profile is not set 
-conan install ../../
+# /!\ use profile defined above 
+conan install ..
 cmake \
   -G "Unix Makefiles" \
   -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
