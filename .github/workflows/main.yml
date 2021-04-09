@@ -113,8 +113,12 @@ jobs:
   build-windows:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ windows-latest ]
+        include:
+          - name: "Windows Debug"
+            os: windows-latest
+            mode: Debug
 
     steps:
       - uses: actions/checkout@v2

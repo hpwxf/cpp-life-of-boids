@@ -16,7 +16,7 @@ export ENABLE_MEMCHECK=${ENABLE_MEMCHECK:-off}
 export ENABLE_STATIC_ANALYSIS=${ENABLE_STATIC_ANALYSIS:-off}
 
 conan profile new default --detect
-#conan profile update settings.build_type="${MODE}" default
+conan profile update settings.build_type="${MODE}" default
 
 mkdir -p build
 cd build
