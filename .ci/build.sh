@@ -39,7 +39,6 @@ case "$COMPILER" in
     # CXXFLAGS="-stdlib=libc++"
     ;;
   msvc)
-    EXTRA_CMAKE_OPTIONS="${EXTRA_CMAKE_OPTIONS} -DCMAKE_GENERATOR_PLATFORM=x64"
     # not defined: use default configuration
     ;;
   *)
@@ -63,5 +62,5 @@ cmake \
   -DENABLE_STATIC_ANALYSIS=${ENABLE_STATIC_ANALYSIS} \
   $(eval echo ${EXTRA_CMAKE_OPTIONS}) \
   ..
-  
+
 cmake --build . --config "${MODE}"

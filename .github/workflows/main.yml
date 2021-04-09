@@ -27,7 +27,7 @@ env:
   DEBUG_CI: true
 
 jobs:
-  unix:
+  build:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
