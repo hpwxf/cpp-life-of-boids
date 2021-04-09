@@ -1,89 +1,21 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <array>
 #include <fmt/core.h>
+#include <array>
 #include <cmath>
+#include <iostream>
+#include <random>
 
 using vec2 = std::array<float, 2>;
 using vec3 = std::array<float, 3>;
 using vec4 = std::array<float, 4>;
+using mat3x3 = std::array<vec3, 3>;
 using mat4x4 = std::array<vec4, 4>;
 
-inline mat4x4 mat4x4_identity() {
-  mat4x4 M;
-  for (int i = 0; i < 4; ++i)
-    for (int j = 0; j < 4; ++j)
-      M[i][j] = i == j ? 1. : 0.;
-  return M;
-}
-
-inline mat4x4 mat4x4_mul(mat4x4 const& a, mat4x4 const& b) {
-  mat4x4 temp;
-  for (int c = 0; c < 4; ++c)
-    for (int r = 0; r < 4; ++r) {
-      temp[c][r] = 0;
-      for (int k = 0; k < 4; ++k)
-        temp[c][r] += a[k][r] * b[c][k];
-    }
-  return temp;
-}
-
-inline mat4x4 mat4x4_rotate_Z(mat4x4 const& M, float angle) {
-  float s = std::sin(angle);
-  float c = std::cos(angle);
-  mat4x4 R = {{
-      {{c, s, 0, 0}},   //
-      {{-s, c, 0, 0}},  //
-      {{0, 0, 1, 0}},   //
-      {{0, 0, 0, 1}}    //
-  }};
-  return mat4x4_mul(M, R);
-}
-
-inline mat4x4 mat4x4_ortho(float l, float r, float b, float t, float n, float f) {
-  mat4x4 M{};
-  M[0][0] = 2 / (r - l);
-  M[1][1] = 2 / (t - b);
-  M[2][2] = -2 / (f - n);
-  M[3][0] = -(r + l) / (r - l);
-  M[3][1] = -(t + b) / (t - b);
-  M[3][2] = -(f + n) / (f - n);
-  M[3][3] = 1;
-  return M;
-}
-
-struct Vertex {
-  vec2 pos;
-  vec3 col;
-};
-
-static const std::array<Vertex, 3> vertices = {{
-    {{-0.6, -0.4}, {1., 0., 0.}},  //
-    {{0.6, -0.4}, {0., 1., 0.}},   //
-    {{0., 0.6}, {0., 0., 1.}}      //
-}};
-
-static const char* const vertex_shader_text
-    = "#version 330\n"
-      "uniform mat4 MVP;\n"
-      "in vec3 vCol;\n"
-      "in vec2 vPos;\n"
-      "out vec3 color;\n"
-      "void main()\n"
-      "{\n"
-      "    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
-      "    color = vCol;\n"
-      "}\n";
-
-static const char* const fragment_shader_text
-    = "#version 330\n"
-      "in vec3 color;\n"
-      "out vec4 fragment;\n"
-      "void main()\n"
-      "{\n"
-      "    fragment = vec4(color, 1.0);\n"
-      "}\n";
+#include "glx.hpp"
+#include "shaders/points.hpp"
+#include "shaders/triangle.hpp"
 
 static void error_callback(int error, const char* description) {
   fmt::print(stderr, "Error[{}]: {}\n", error, description);
@@ -105,7 +37,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow* window = glfwCreateWindow(640, 480, "OpenGL Triangle", nullptr, nullptr);
+  GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Triangle", nullptr, nullptr);
   if (!window) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -117,38 +49,85 @@ int main() {
   gladLoadGL();
   glfwSwapInterval(1);
 
-  // NOTE: OpenGL error checks have been omitted for brevity
+  // FIXME: OpenGL error checks have been omitted for brevity
 
-  GLuint vertex_buffer{};
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+  // triangle part
+  // new
+  ShaderProgram triangle_shaderProgram
+      = ShaderProgram_new(triangle::vertex_shader_text, triangle::fragment_shader_text);
+  VertexArray triangle_vertexArray = VertexArray_new();
+  Buffer triangle_buffer = Buffer_new();
+  // init
+  VertexArray_bind(triangle_vertexArray);
+  Buffer_bind(triangle_buffer, GL_ARRAY_BUFFER);
+  ShaderProgram_activate(triangle_shaderProgram);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(triangle::vertices), triangle::vertices.data(), GL_STATIC_DRAW);
 
-  const GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &vertex_shader_text, nullptr);
-  glCompileShader(vertex_shader);
+  const GLint mvp_location = ShaderProgram_getUniformLocation(triangle_shaderProgram, "MVP");
+  const GLint vpos_location = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vPos");
+  const GLint vcol_location = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vCol");
 
-  const GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &fragment_shader_text, nullptr);
-  glCompileShader(fragment_shader);
-
-  const GLuint program = glCreateProgram();
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
-  glLinkProgram(program);
-
-  const GLint mvp_location = glGetUniformLocation(program, "MVP");
-  const GLint vpos_location = glGetAttribLocation(program, "vPos");
-  const GLint vcol_location = glGetAttribLocation(program, "vCol");
-
-  GLuint vertex_array{};
-  glGenVertexArrays(1, &vertex_array);
-  glBindVertexArray(vertex_array);
+  glVertexAttribPointer(
+      vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(triangle::Vertex), (void*)offsetof(triangle::Vertex, pos));
+  glVertexAttribPointer(
+      vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(triangle::Vertex), (void*)offsetof(triangle::Vertex, col));
   glEnableVertexAttribArray(vpos_location);
-  glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
   glEnableVertexAttribArray(vcol_location);
-  glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
 
+  // point part
+  // new
+  ShaderProgram points_shaderProgram = ShaderProgram_new(points::vertex_shader_text, points::fragment_shader_text);
+  VertexArray points_vertexArray = VertexArray_new();
+  Buffer points_buffer = Buffer_new();
+  // init
+  VertexArray_bind(points_vertexArray);
+  Buffer_bind(points_buffer, GL_ARRAY_BUFFER);
+  ShaderProgram_activate(points_shaderProgram);
+
+  const GLint transform_location = ShaderProgram_getUniformLocation(points_shaderProgram, "transform");
+  const GLint pointSize_location = ShaderProgram_getUniformLocation(points_shaderProgram, "pointSize");
+  const GLint maxSpeedSquared_location = ShaderProgram_getUniformLocation(points_shaderProgram, "maxSpeedSquared");
+  const GLint position_location = ShaderProgram_getAttribLocation(points_shaderProgram, "position");
+  const GLint velocity_location = ShaderProgram_getAttribLocation(points_shaderProgram, "velocity");
+
+  glVertexAttribPointer(
+      position_location, 2, GL_FLOAT, GL_FALSE, sizeof(points::Point), (void*)offsetof(points::Point, position));
+  glVertexAttribPointer(
+      velocity_location, 2, GL_FLOAT, GL_FALSE, sizeof(points::Point), (void*)offsetof(points::Point, velocity));
+
+  glEnableVertexAttribArray(position_location);
+  glEnableVertexAttribArray(velocity_location);
+
+  glEnable(GL_PROGRAM_POINT_SIZE);
+
+  // points pre-processing
+
+  int width{}, height{};
+  glfwGetFramebufferSize(window, &width, &height);
+
+  std::vector<points::Point> points(10'000);
+  auto get_pos = [=](float t) {
+    return vec2{(float)(width * (0.5 + 0.4 * cos(t))), (float)(height * (0.5 + 0.4 * sin(t)))};
+  };
+
+  for (float v = 0; auto& p : points) {
+    v += 1.0;
+    p = points::Point{get_pos(v), vec2{}};
+  }
+
+  std::random_device random_device;
+  std::default_random_engine eng{random_device()};
+  std::uniform_real_distribution<float> velocity_space{0, 10};
+  std::uniform_real_distribution<float> angle_space{0, 6.28};
+
+  // global pre-processing
+
+  
+  auto last_time = std::chrono::steady_clock::now();
+  long count = 0;
+  double accumulated_time = 0;
+  
+  // global loop
   while (!glfwWindowShouldClose(window)) {
     int width{}, height{};
     glfwGetFramebufferSize(window, &width, &height);
@@ -157,15 +136,64 @@ int main() {
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    mat4x4 m = mat4x4_identity();
-    m = mat4x4_rotate_Z(m, (float)glfwGetTime());
-    mat4x4 p = mat4x4_ortho(-ratio, ratio, -1., 1., 1., -1.);
-    mat4x4 mvp = mat4x4_mul(p, m);
+    {  // triangle
+      mat4x4 m = triangle::mat4x4_identity();
+      m = triangle::mat4x4_rotate_Z(m, (float)glfwGetTime());
+      mat4x4 p = triangle::mat4x4_ortho(-ratio, ratio, -1., 1., 1., -1.);
+      mat4x4 mvp = triangle::mat4x4_mul(p, m);
 
-    glUseProgram(program);
-    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)&mvp);
-    glBindVertexArray(vertex_array);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+      VertexArray_bind(triangle_vertexArray);
+      Buffer_bind(triangle_buffer, GL_ARRAY_BUFFER);
+      ShaderProgram_activate(triangle_shaderProgram);
+
+      glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)&mvp);
+      glBindVertexArray(triangle_vertexArray.vertex_array);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    {  // points
+      mat3x3 transform = points::vertex_transform_2d(width, height);
+      float pointSize = 3.0;
+      float max_speed = 10.0;
+
+      for (auto& p : points) {
+        auto a = angle_space(eng);
+        auto m = velocity_space(eng);
+        p.velocity = vec2 { m * cos(a), m*sin(a)};  
+        p.position[0] += p.velocity[0] / 5.0;
+        p.position[1] += p.velocity[1] / 5.0;
+      }
+
+      VertexArray_bind(points_vertexArray);
+      Buffer_bind(points_buffer, GL_ARRAY_BUFFER);
+      ShaderProgram_activate(points_shaderProgram);
+
+      glUniformMatrix3fv(transform_location, 1, GL_FALSE, (const GLfloat*)&transform);
+      glUniform1f(pointSize_location, pointSize);
+      glUniform1f(maxSpeedSquared_location, max_speed);
+      glBindVertexArray(points_vertexArray.vertex_array);
+
+      glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(points::Point), points.data(), GL_STREAM_DRAW);
+      glDrawArrays(GL_POINTS, 0, points.size());
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration<double>(now-last_time).count();
+    last_time = now;
+    accumulated_time += duration;
+    count += 1;
+    
+    if (accumulated_time > 1) {
+      auto title = fmt::format("FPS: {:.2}", static_cast<double>(count) / accumulated_time );
+      glfwSetWindowTitle(window, title.data());
+      count = 0;
+      accumulated_time = 0;
+    }
+    
+
+
+
 
     glfwSwapBuffers(window);
     glfwPollEvents();
