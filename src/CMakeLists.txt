@@ -5,6 +5,6 @@ FIND_PACKAGE(fmt REQUIRED)
 add_executable(life-of-boids main.cpp glx.cpp glx.hpp)
 target_link_libraries(life-of-boids PRIVATE glfw::glfw glad::glad fmt::fmt)
 
-FIND_PACKAGE(opencv REQUIRED)
+FIND_PACKAGE(OpenCV REQUIRED)
 add_executable(main_opencv main_opencv.cpp)
 target_link_libraries(main_opencv PRIVATE opencv::opencv)
