@@ -83,7 +83,8 @@ jobs:
           if [ "${ENABLE_MEMCHECK}" == "on" ]; then
             sudo apt install -qy valgrind
           fi
-          sudo apt install -qy libgl-dev
+          sudo apt install -qy libgl-dev # for OpenGL
+          sudo apt install -qy libgtk2.0-dev # for OpenCV
         if: runner.os == 'Linux' # or use $RUNNER_OS
 
       - name: install
