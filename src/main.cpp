@@ -278,7 +278,9 @@ int main() {
 
   glfwTerminate();
 
-  // std::cout << "Dumping profile" << std::endl;
-  // profiler::dumpBlocksToFile("test_profile.prof");
+#ifdef USING_EASY_PROFILER
+   std::cout << "Dumping profile" << std::endl;
+   profiler::dumpBlocksToFile("test_profile.prof");
+#endif
   exit(EXIT_SUCCESS);
 }
