@@ -3,9 +3,9 @@
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <iostream>
-#include <chrono>
 #include <random>
 
 using vec2 = std::array<float, 2>;
@@ -15,6 +15,7 @@ using mat3x3 = std::array<vec3, 3>;
 using mat4x4 = std::array<vec4, 4>;
 
 #include "glx.hpp"
+#include "shaders/lines.hpp"
 #include "shaders/points.hpp"
 #include "shaders/triangle.hpp"
 
@@ -101,6 +102,28 @@ int main() {
 
   glEnable(GL_PROGRAM_POINT_SIZE);
 
+  // lines
+  // new
+  ShaderProgram lines_shaderProgram = ShaderProgram_new(lines::vertex_shader_text, lines::fragment_shader_text);
+  VertexArray lines_vertexArray = VertexArray_new();
+  Buffer lines_buffer = Buffer_new();
+  // init
+  VertexArray_bind(lines_vertexArray);
+  Buffer_bind(lines_buffer, GL_ARRAY_BUFFER);
+  ShaderProgram_activate(lines_shaderProgram);
+
+  const GLint transform_location2 = ShaderProgram_getUniformLocation(points_shaderProgram, "transform");
+  const GLint vpos_location2 = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vPos");
+  const GLint vcol_location2 = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vCol");
+
+  glVertexAttribPointer(
+      vpos_location2, 2, GL_FLOAT, GL_FALSE, sizeof(triangle::Vertex), (void*)offsetof(triangle::Vertex, pos));
+  glVertexAttribPointer(
+      vcol_location2, 3, GL_FLOAT, GL_FALSE, sizeof(triangle::Vertex), (void*)offsetof(triangle::Vertex, col));
+
+  glEnableVertexAttribArray(vpos_location2);
+  glEnableVertexAttribArray(vcol_location2);
+
   // points pre-processing
 
   int width{}, height{};
@@ -123,11 +146,10 @@ int main() {
 
   // global pre-processing
 
-  
   auto last_time = std::chrono::steady_clock::now();
   long count = 0;
   double accumulated_time = 0;
-  
+
   // global loop
   while (!glfwWindowShouldClose(window)) {
     int width{}, height{};
@@ -160,7 +182,7 @@ int main() {
       for (auto& p : points) {
         auto a = angle_space(eng);
         auto m = velocity_space(eng);
-        p.velocity = vec2 { m * cos(a), m*sin(a)};  
+        p.velocity = vec2{m * cos(a), m * sin(a)};
         p.position[0] += p.velocity[0] / 5.0;
         p.position[1] += p.velocity[1] / 5.0;
       }
@@ -179,22 +201,41 @@ int main() {
       glDrawArrays(GL_POINTS, 0, points.size());
     }
 
+    {  // lines
+      mat3x3 transform = points::vertex_transform_2d(width, height);
+
+      VertexArray_bind(lines_vertexArray);
+      Buffer_bind(lines_buffer, GL_ARRAY_BUFFER);
+      ShaderProgram_activate(lines_shaderProgram);
+
+      glUniformMatrix3fv(transform_location2, 1, GL_FALSE, (const GLfloat*)&transform);
+      glBindVertexArray(lines_vertexArray.vertex_array);
+      
+      std::vector<triangle::Vertex> vertex_data;
+      vertex_data.push_back(triangle::Vertex{{0, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(
+          triangle::Vertex{{static_cast<float>(width), static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(triangle::Vertex{{static_cast<float>(width) / 2, 0}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(
+          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height)/2}, {1.0, 1.0, 1.0}});
+
+      glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
+      glDrawArrays(GL_LINES, 0, vertex_data.size());
+    }
+
+    // Measure FPS
     auto now = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration<double>(now-last_time).count();
+    auto duration = std::chrono::duration<double>(now - last_time).count();
     last_time = now;
     accumulated_time += duration;
     count += 1;
-    
+
     if (accumulated_time > 1) {
-      auto title = fmt::format("FPS: {:.2}", static_cast<double>(count) / accumulated_time );
+      auto title = fmt::format("FPS: {:.2}", static_cast<double>(count) / accumulated_time);
       glfwSetWindowTitle(window, title.data());
       count = 0;
       accumulated_time = 0;
     }
-    
-
-
-
 
     glfwSwapBuffers(window);
     glfwPollEvents();
