@@ -19,6 +19,22 @@ using mat4x4 = std::array<vec4, 4>;
 #include "shaders/points.hpp"
 #include "shaders/triangle.hpp"
 
+#ifndef TRACY_ENABLE
+#define USING_EASY_PROFILER
+#endif
+
+#ifdef USING_EASY_PROFILER
+#include <easy/profiler.h>
+#include <easy/profiler.h>
+#define TRACE_START_BLOCK(name) EASY_BLOCK(name)
+#define TRACE_END_BLOCK(name) EASY_END_BLOCK
+#else /* USING_EASY_PROFILER */
+#define EASY_PROFILER_ENABLE
+#define TRACE_START_BLOCK(name) FrameMarkStart(name)
+#define TRACE_END_BLOCK(name) FrameMarkEnd(name)
+#include <Tracy.hpp>
+#endif /* USING_EASY_PROFILER */
+
 static void error_callback(int error, const char* description) {
   fmt::print(stderr, "Error[{}]: {}\n", error, description);
 }
@@ -29,6 +45,8 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
 }
 
 int main() {
+  EASY_PROFILER_ENABLE;
+  
   glfwSetErrorCallback(error_callback);
 
   if (!glfwInit())
@@ -160,11 +178,14 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT);
 
     {  // triangle
+      TRACE_START_BLOCK("Computing triangle");
       mat4x4 m = triangle::mat4x4_identity();
       m = triangle::mat4x4_rotate_Z(m, (float)glfwGetTime());
       mat4x4 p = triangle::mat4x4_ortho(-ratio, ratio, -1., 1., 1., -1.);
       mat4x4 mvp = triangle::mat4x4_mul(p, m);
+      TRACE_END_BLOCK("Computing triangle");
 
+      TRACE_START_BLOCK("Draw triangle");
       VertexArray_bind(triangle_vertexArray);
       Buffer_bind(triangle_buffer, GL_ARRAY_BUFFER);
       ShaderProgram_activate(triangle_shaderProgram);
@@ -172,9 +193,11 @@ int main() {
       glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)&mvp);
       glBindVertexArray(triangle_vertexArray.vertex_array);
       glDrawArrays(GL_TRIANGLES, 0, 3);
+      TRACE_END_BLOCK("Draw triangle");
     }
 
     {  // points
+      TRACE_START_BLOCK("Computing points");
       mat3x3 transform = points::vertex_transform_2d(width, height);
       float pointSize = 3.0;
       float max_speed = 10.0;
@@ -186,7 +209,9 @@ int main() {
         p.position[0] += p.velocity[0] / 5.0;
         p.position[1] += p.velocity[1] / 5.0;
       }
+      TRACE_END_BLOCK("Computing points");
 
+      TRACE_START_BLOCK("Drawing points");
       VertexArray_bind(points_vertexArray);
       Buffer_bind(points_buffer, GL_ARRAY_BUFFER);
       ShaderProgram_activate(points_shaderProgram);
@@ -199,18 +224,13 @@ int main() {
       glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
       glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(points::Point), points.data(), GL_STREAM_DRAW);
       glDrawArrays(GL_POINTS, 0, points.size());
+      TRACE_END_BLOCK("Drawing points");
     }
 
     {  // lines
+      TRACE_START_BLOCK("Computing lines");
       mat3x3 transform = points::vertex_transform_2d(width, height);
 
-      VertexArray_bind(lines_vertexArray);
-      Buffer_bind(lines_buffer, GL_ARRAY_BUFFER);
-      ShaderProgram_activate(lines_shaderProgram);
-
-      glUniformMatrix3fv(transform_location2, 1, GL_FALSE, (const GLfloat*)&transform);
-      glBindVertexArray(lines_vertexArray.vertex_array);
-      
       std::vector<triangle::Vertex> vertex_data;
       vertex_data.push_back(triangle::Vertex{{0, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
@@ -218,11 +238,22 @@ int main() {
       vertex_data.push_back(triangle::Vertex{{static_cast<float>(width) / 2, 0}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
           triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height)/2}, {1.0, 1.0, 1.0}});
+      TRACE_END_BLOCK("Computing lines");
 
+      TRACE_START_BLOCK("Drawing lines");
+      VertexArray_bind(lines_vertexArray);
+      Buffer_bind(lines_buffer, GL_ARRAY_BUFFER);
+      ShaderProgram_activate(lines_shaderProgram);
+
+      glUniformMatrix3fv(transform_location2, 1, GL_FALSE, (const GLfloat*)&transform);
+      glBindVertexArray(lines_vertexArray.vertex_array);
+      
       glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
       glDrawArrays(GL_LINES, 0, vertex_data.size());
+      TRACE_END_BLOCK("Drawing lines");
     }
 
+    TRACE_START_BLOCK("Computing FPS");
     // Measure FPS
     auto now = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration<double>(now - last_time).count();
@@ -236,7 +267,9 @@ int main() {
       count = 0;
       accumulated_time = 0;
     }
+    TRACE_END_BLOCK("Computing FPS");
 
+    
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
@@ -244,5 +277,8 @@ int main() {
   glfwDestroyWindow(window);
 
   glfwTerminate();
+
+  // std::cout << "Dumping profile" << std::endl;
+  // profiler::dumpBlocksToFile("test_profile.prof");
   exit(EXIT_SUCCESS);
 }
