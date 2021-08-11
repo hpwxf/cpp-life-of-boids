@@ -29,7 +29,8 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
   }
   if (key == GLFW_KEY_S  && action == GLFW_PRESS) {
     std::puts("Export current display");
-    saveImage("export.png", window);
+    char export_filename[] = "export.png"; 
+    saveImage(export_filename, window);
   }
 }
 
