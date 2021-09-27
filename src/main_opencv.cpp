@@ -4,11 +4,19 @@
 #include <opencv2/imgcodecs.hpp>
 #include <algorithm>
 
-int main() {
-  std::string image_path = cv::samples::findFile("../assets/Grid_Concept_Art.png");
+int main(int argc, char ** argv) {
+  std::string filename = "../assets/Grid_Concept_Art.png"; // default filename
+  if (argc > 2) {
+    std::cerr << "Bad usage: " << argv[0] << ": [filename]" << std::endl;
+    return 2;
+  } else if (argc == 2) {
+    filename = argv[1];
+  }
+  
+  std::string image_path = cv::samples::findFile(filename);
   cv::Mat img = imread(image_path, cv::IMREAD_COLOR);
   if (img.empty()) {
-    std::cout << "Could not read the image: " << image_path << std::endl;
+    std::cerr << "Could not read the image: " << image_path << std::endl;
     return 1;
   }
 
