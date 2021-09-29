@@ -141,7 +141,8 @@ int main() {
     return vec2{(float)(width * (0.5 + 0.4 * std::cos(t))), (float)(height * (0.5 + 0.4 * std::sin(t)))};
   };
 
-  for (float v = 0; auto& p : points) {
+  float v = 0;
+  for (auto& p : points) {
     v += 1.0;
     p = points::Point{get_pos(v), vec2{}};
   }
