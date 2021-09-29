@@ -9,7 +9,6 @@ fi
 # Default configuration when used out of travis-ci
 MODE=${MODE:-Debug}
 EXTRA_CMAKE_OPTIONS=${EXTRA_CMAKE_OPTIONS:-}
-BUILD_TEST=${BUILD_TEST:-true}
 
 export ENABLE_COVERAGE=${ENABLE_COVERAGE:-off}
 export ENABLE_MEMCHECK=${ENABLE_MEMCHECK:-off}

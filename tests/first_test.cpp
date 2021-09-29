@@ -1,20 +1,11 @@
-#include <cmath>
 #include <iostream>
-#include "gtest/gtest.h"
 
-// blank namespace to avoid implementation collision
-namespace {
-
-TEST(FirstTest, Canary) {
-  ASSERT_EQ(1, 1) << "Canary could not fail!";
+// Classical test are executable with main function
+// A test is failed if the execution crashed or if the main function returns a non zero exit code
+int main() {
+  int x = 1;
+  if (x != x) {
+    return 1;
+  }
+  return 0;  // OK !
 }
-
-// Disabled by name
-TEST(DISABLED_FirstTest, Feature2) {
-  ASSERT_EQ(1, 2);
-}
-TEST(FirstTest, DISABLED_Feature3) {
-  ASSERT_EQ(1, 2);
-}
-
-}  // namespace
