@@ -13,15 +13,6 @@ if [[ "$DEBUG_CI" == "true" ]]; then
 
     echo "------------------------------------"
 
-    if ( command -v clang-format >/dev/null 2>&1 ); then
-      echo "clang-format config: $(command -v clang-format)"
-      clang-format --version 2>&1 | sed 's/^/  /'
-    else
-      echo "No clang-format command found"
-    fi
-
-    echo "------------------------------------"
-
     if ( command -v cmake >/dev/null 2>&1 ); then
       echo "CMake config: $(command -v cmake)"
       cmake --version 2>&1 | sed 's/^/  /'

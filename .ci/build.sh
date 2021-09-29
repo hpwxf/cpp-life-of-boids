@@ -10,10 +10,6 @@ fi
 MODE=${MODE:-Debug}
 EXTRA_CMAKE_OPTIONS=${EXTRA_CMAKE_OPTIONS:-}
 
-export ENABLE_COVERAGE=${ENABLE_COVERAGE:-off}
-export ENABLE_MEMCHECK=${ENABLE_MEMCHECK:-off}
-export ENABLE_STATIC_ANALYSIS=${ENABLE_STATIC_ANALYSIS:-off}
-
 conan profile new default --detect
 case "$COMPILER" in 
   gcc*)
@@ -29,13 +25,9 @@ case "$COMPILER" in
     conan profile update settings.compiler.libcxx=libstdc++11 default
     export CXX=clang++${COMPILER#clang} 
     export CC=clang${COMPILER#clang}
-    # initially was only for clang ≥ 7
-    # CXXFLAGS="-stdlib=libc++"
     ;;
   apple-clang)
-    # conan profile update settings.compiler.libcxx=libstdc++11 default
-    # initially was only for clang ≥ 7
-    # CXXFLAGS="-stdlib=libc++"
+    # not defined: use default configuration
     ;;
   msvc)
     # not defined: use default configuration
@@ -56,9 +48,6 @@ conan install ..
 cmake \
   -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
   -DCMAKE_BUILD_TYPE="${MODE}" \
-  -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
-  -DENABLE_MEMCHECK="${ENABLE_MEMCHECK}" \
-  -DENABLE_STATIC_ANALYSIS=${ENABLE_STATIC_ANALYSIS} \
   $(eval echo ${EXTRA_CMAKE_OPTIONS}) \
   ..
 

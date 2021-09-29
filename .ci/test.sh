@@ -10,10 +10,4 @@ fi
 
 cd build
 
-if [[ "$ENABLE_COVERAGE" == "on" ]]; then
-    cmake --build . --target coverage --config "${MODE}"
-elif [[ "$ENABLE_MEMCHECK" == "on" ]]; then
-    ctest -C "${MODE}" ${CTEST_FLAGS} -T memcheck
-else
-    ctest -C "${MODE}" ${CTEST_FLAGS}
-fi
+ctest -C "${MODE}" ${CTEST_FLAGS}
