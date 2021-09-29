@@ -1,12 +1,13 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <fmt/core.h>
 #include <array>
 #include <chrono>
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 #include <random>
+#include <sstream>
 
 using vec2 = std::array<float, 2>;
 using vec3 = std::array<float, 3>;
@@ -20,7 +21,7 @@ using mat4x4 = std::array<vec4, 4>;
 #include "shaders/triangle.hpp"
 
 static void error_callback(int error, const char* description) {
-  fmt::print(stderr, "Error[{}]: {}\n", error, description);
+  std::cerr << "Error[" << error << "]: " << description << "\n";
 }
 
 static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int /*mods*/) {
@@ -237,7 +238,9 @@ int main() {
     count += 1;
 
     if (accumulated_time > 1) {
-      auto title = fmt::format("FPS: {:.2}", static_cast<double>(count) / accumulated_time);
+      std::ostringstream oss;
+      oss << "FPS:" << std::setprecision(2) << static_cast<double>(count) / accumulated_time;
+      auto title = oss.str();
       glfwSetWindowTitle(window, title.data());
       count = 0;
       accumulated_time = 0;
