@@ -2,12 +2,10 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <array>
-#include <chrono>
 #include <cmath>
-#include <iostream>
 #include <iomanip>
-#include <random>
-#include <sstream>
+#include <iostream>
+#include <vector>
 
 using vec2 = std::array<float, 2>;
 using vec3 = std::array<float, 3>;
@@ -28,9 +26,9 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
-  if (key == GLFW_KEY_S  && action == GLFW_PRESS) {
+  if (key == GLFW_KEY_S && action == GLFW_PRESS) {
     std::puts("Export current display");
-    char export_filename[] = "export.png"; 
+    char export_filename[] = "export.png";
     saveImage(export_filename, window);
   }
 }
@@ -147,19 +145,11 @@ int main() {
     p = points::Point{get_pos(v), vec2{}};
   }
 
-  std::random_device random_device;
-  std::default_random_engine eng{random_device()};
-  std::uniform_real_distribution<float> velocity_space{0, 10};
-  std::uniform_real_distribution<float> angle_space{0, 6.28};
-
-  // global pre-processing
-
-  auto last_time = std::chrono::steady_clock::now();
-  long count = 0;
-  double accumulated_time = 0;
-
   // global loop
+  float t = 0;
   while (!glfwWindowShouldClose(window)) {
+    t += 1.;
+    
     int width{}, height{};
     glfwGetFramebufferSize(window, &width, &height);
     const float ratio = (float)width / (float)height;
@@ -187,12 +177,15 @@ int main() {
       float pointSize = 3.0;
       float max_speed = 10.0;
 
+      float v = 0;
       for (auto& p : points) {
+        v += 1.0;
         auto a = angle_space(eng);
         auto m = velocity_space(eng);
+        p.velocity = vec2{20*std::cos(t/10) * (std::cos(v)-std::cos(v+1)), 20*std::cos(t/10) * (std::sin(v)-std::sin(v+1))};
         p.velocity = vec2{m * std::cos(a), m * std::sin(a)};
-        p.position[0] += p.velocity[0] / 5.0;
-        p.position[1] += p.velocity[1] / 5.0;
+        p.position[0] += p.velocity[0];
+        p.position[1] += p.velocity[1];
       }
 
       VertexArray_bind(points_vertexArray);
@@ -218,34 +211,21 @@ int main() {
 
       glUniformMatrix3fv(transform_location2, 1, GL_FALSE, (const GLfloat*)&transform);
       glBindVertexArray(lines_vertexArray.vertex_array);
-      
+
       std::vector<triangle::Vertex> vertex_data;
       vertex_data.push_back(triangle::Vertex{{0, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
           triangle::Vertex{{static_cast<float>(width), static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(triangle::Vertex{{static_cast<float>(width) / 2, 0}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
-          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height)/2}, {1.0, 1.0, 1.0}});
+          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
 
       glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
       glDrawArrays(GL_LINES, 0, vertex_data.size());
     }
 
     // Measure FPS
-    auto now = std::chrono::steady_clock::now();
-    auto duration = std::chrono::duration<double>(now - last_time).count();
-    last_time = now;
-    accumulated_time += duration;
-    count += 1;
-
-    if (accumulated_time > 1) {
-      std::ostringstream oss;
-      oss << "FPS:" << std::setprecision(2) << static_cast<double>(count) / accumulated_time;
-      auto title = oss.str();
-      glfwSetWindowTitle(window, title.data());
-      count = 0;
-      accumulated_time = 0;
-    }
+    glfwSetWindowTitle(window, "FPS: to be defined");
 
     glfwSwapBuffers(window);
     glfwPollEvents();
