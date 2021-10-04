@@ -36,14 +36,22 @@ pip3 install conan
   conan profile new default --detect
   ```
 
-## Build
+## Build and tests
+
+Choose a build mode
+```
+MODE=Release
+```
+or
+```
+MODE=Debug
+```
+
+### Unix like (Linux ou macOS)
 
 It will use `CC` and `CXX` environment variables defined before.
 
 ```
-# Choose a build mode
-MODE=Release # or MODE=Debug
-
 mkdir build
 cd build
 conan install ..
@@ -51,5 +59,19 @@ cmake \
     -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
     -DCMAKE_BUILD_TYPE="${MODE}" \
     ..
+cmake --build .
+ctest 
+```
+
+### Windows
+```
+mkdir build
+cd build
+conan install ..
+cmake \
+    -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
+    -DCMAKE_GENERATOR_PLATFORM=x64 \
+    ..
 cmake --build . --config "${MODE}"
+ctest -C "${MODE}"
 ```
