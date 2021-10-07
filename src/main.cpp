@@ -152,6 +152,7 @@ int main() {
     
     int width{}, height{};
     glfwGetFramebufferSize(window, &width, &height);
+    // std::cout << "W x H = " << width << " x " << height << "\n";
     const float ratio = (float)width / (float)height;
 
     glViewport(0, 0, width, height);
@@ -180,10 +181,7 @@ int main() {
       float v = 0;
       for (auto& p : points) {
         v += 1.0;
-        auto a = angle_space(eng);
-        auto m = velocity_space(eng);
         p.velocity = vec2{20*std::cos(t/10) * (std::cos(v)-std::cos(v+1)), 20*std::cos(t/10) * (std::sin(v)-std::sin(v+1))};
-        p.velocity = vec2{m * std::cos(a), m * std::sin(a)};
         p.position[0] += p.velocity[0];
         p.position[1] += p.velocity[1];
       }
@@ -213,15 +211,16 @@ int main() {
       glBindVertexArray(lines_vertexArray.vertex_array);
 
       std::vector<triangle::Vertex> vertex_data;
-      vertex_data.push_back(triangle::Vertex{{0, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(
-          triangle::Vertex{{static_cast<float>(width), static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(triangle::Vertex{{static_cast<float>(width) / 2, 0}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(
-          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
 
+      auto h = static_cast<float>(height);
+      auto w = static_cast<float>(width);
+
+      vertex_data.push_back(triangle::Vertex{{w, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(triangle::Vertex{{w, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(triangle::Vertex{{0, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(triangle::Vertex{{0, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}});
       glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
-      glDrawArrays(GL_LINES, 0, vertex_data.size());
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, vertex_data.size());
     }
 
     // Measure FPS
