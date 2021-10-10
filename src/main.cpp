@@ -215,12 +215,14 @@ int main() {
       auto h = static_cast<float>(height);
       auto w = static_cast<float>(width);
 
-      vertex_data.push_back(triangle::Vertex{{w, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(triangle::Vertex{{w, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(triangle::Vertex{{0, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}});
-      vertex_data.push_back(triangle::Vertex{{0, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}});
+      vertex_data.push_back(triangle::Vertex{{w, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex A |
+      vertex_data.push_back(triangle::Vertex{{w, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex B | Triangle ABC
+      vertex_data.push_back(triangle::Vertex{{0, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex C | 
+      vertex_data.push_back(triangle::Vertex{{w, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex B   |
+      vertex_data.push_back(triangle::Vertex{{0, h / 2 + h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex C   | Triangle BCD
+      vertex_data.push_back(triangle::Vertex{{0, h / 2 - h * 0.002f}, {1.0, 1.0, 1.0}}); // Vertex D   |
       glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
-      glDrawArrays(GL_TRIANGLE_STRIP, 0, vertex_data.size());
+      glDrawArrays(GL_TRIANGLES, 0, vertex_data.size()); // Should use GL_TRIANGLE_SPAN by setting only Vertices ABCD
     }
 
     // Measure FPS
