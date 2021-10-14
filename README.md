@@ -75,3 +75,20 @@ cmake \
 cmake --build . --config "${MODE}"
 ctest -C "${MODE}"
 ```
+
+### Docker
+
+Using image [conanio/gcc9](https://hub.docker.com/r/conanio/gcc9)
+```
+# install required system libs
+sudo apt update && sudo apt install -y libgtk2.0-dev libgl1-mesa-dev
+# install new profile with new ABI config
+conan profile new default --detect
+conan profile update settings.compiler.libcxx=libstdc++11 default
+# standard build process
+mkdir build && cd build
+conan install ..
+cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build .
+ctest
+```
