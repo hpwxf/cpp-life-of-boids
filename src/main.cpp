@@ -137,7 +137,7 @@ int main() {
 
   std::vector<points::Point> points(10'000);
   auto get_pos = [=](float t) {
-    return vec2{(float)(width * (0.5 + 0.4 * cos(t))), (float)(height * (0.5 + 0.4 * sin(t)))};
+    return vec2{(float)(width * (0.5 + 0.4 * std::cos(t))), (float)(height * (0.5 + 0.4 * std::sin(t)))};
   };
 
   for (float v = 0; auto& p : points) {
@@ -188,7 +188,7 @@ int main() {
       for (auto& p : points) {
         auto a = angle_space(eng);
         auto m = velocity_space(eng);
-        p.velocity = vec2{m * cos(a), m * sin(a)};
+        p.velocity = vec2{m * std::cos(a), m * std::sin(a)};
         p.position[0] += p.velocity[0] / 5.0;
         p.position[1] += p.velocity[1] / 5.0;
       }
