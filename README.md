@@ -2,6 +2,21 @@
 
 ## Requirements
 
+### CMake and C++ compiler
+
+Check if CMake is installed and available in your PATH
+```
+cmake --version
+```
+It could be installed in `Program Files` directory, so that,
+```
+export PATH="C:/Program Files/CMake/bin":$PATH
+```
+will help to access to it.
+
+
+You can install `cmake` in your local environment using `pip install cmake --user`.
+
 ### Install conan
 
 ```
