@@ -118,9 +118,9 @@ int main() {
   Buffer_bind(lines_buffer, GL_ARRAY_BUFFER);
   ShaderProgram_activate(lines_shaderProgram);
 
-  const GLint transform_location2 = ShaderProgram_getUniformLocation(points_shaderProgram, "transform");
-  const GLint vpos_location2 = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vPos");
-  const GLint vcol_location2 = ShaderProgram_getAttribLocation(triangle_shaderProgram, "vCol");
+  const GLint transform_location2 = ShaderProgram_getUniformLocation(lines_shaderProgram, "transform");
+  const GLint vpos_location2 = ShaderProgram_getAttribLocation(lines_shaderProgram, "vPos");
+  const GLint vcol_location2 = ShaderProgram_getAttribLocation(lines_shaderProgram, "vCol");
 
   glVertexAttribPointer(
       vpos_location2, 2, GL_FLOAT, GL_FALSE, sizeof(triangle::Vertex), (void*)offsetof(triangle::Vertex, pos));
