@@ -51,6 +51,12 @@ pip3 install conan
   conan profile new default --detect
   ```
 
+⚠️ : by default `--detect` will set `build_type` to `Release`.
+To define a `Debug` profile, you should use:
+```
+conan profile update settings.build_type=Debug <your-profile>
+```
+
 ## Build and tests
 
 Choose a build mode
