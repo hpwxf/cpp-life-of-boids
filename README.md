@@ -1,6 +1,6 @@
 # life-of-boids in C++
 
-See https://github.com/hpwxf/rs-life-of-boids for Rust part.
+See https://github.com/hpwxf/rs-life-of-boids for Rust version.
 
 ## Requirements
 
@@ -15,8 +15,6 @@ It could be installed in `Program Files` directory, so that,
 export PATH="C:/Program Files/CMake/bin":$PATH
 ```
 will help to access to it.
-
-
 
 ### Install conan
 
@@ -51,6 +49,12 @@ pip3 install conan
   ```
   conan profile new default --detect
   ```
+  
+⚠️ : by default `--detect` will set `build_type` to `Release`.
+To define a `Debug` profile, you should use:
+```
+conan profile update settings.build_type=Debug <your-profile>
+```
 
 ## Build and tests
 
@@ -97,6 +101,8 @@ ctest -C "${MODE}"
 * `-DENABLE_STATIC_ANALYSIS=ON|OFF` : enable/disable static analysis while compiling
 
 * `-DCMAKE_CXX_COMPILER_LAUNCHER=ccache` : enable `ccache` as compiler cache
+
+### Docker
 
 Using image [conanio/gcc9](https://hub.docker.com/r/conanio/gcc9)
 ```
