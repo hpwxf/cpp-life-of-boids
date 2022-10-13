@@ -16,6 +16,9 @@ export PATH="C:/Program Files/CMake/bin":$PATH
 ```
 will help to access to it.
 
+You can install `cmake` in your local environment
+using `pip install cmake --user`.
+
 ### Install conan
 
 ```
