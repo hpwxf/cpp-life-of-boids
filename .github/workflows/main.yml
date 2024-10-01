@@ -90,21 +90,40 @@ jobs:
           sudo apt install -qy libva-dev libvdpau-dev # new requirements for OpenCV
         if: runner.os == 'Linux' # or use $RUNNER_OS
 
+
+      - name: Configure Python venv path
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            BIN_VENV=./venv/Scripts
+          else
+            BIN_VENV=./venv/bin
+          fi
+          echo "PYTHON_VERSION=$(python3 --version | awk '{ print $2 }')" >> $GITHUB_ENV
+          echo "BIN_VENV=${BIN_VENV}" >> $GITHUB_ENV
+          ${BIN_VENV}/python --version || (echo  "Rebuilding venv" && rm -fr venv && python3 -m venv venv)
+
       - name: install
         shell: bash
-        run: .ci/install.sh
+        run: |
+          . ${BIN_VENV}/activate
+          .github/scripts/install.sh
 
       - name: info
         shell: bash
-        run: .ci/info.sh
+        run: .github/scripts/info.sh
 
       - name: build
         shell: bash
-        run: .ci/build.sh
+        run:  |
+          . ${BIN_VENV}/activate
+          .github/scripts/build.sh
 
       - name: test
         shell: bash
-        run: .ci/test.sh
+        run:  |
+          . ${BIN_VENV}/activate
+          .github/scripts/test.sh
 
       - name: publish_report
         shell: bash
