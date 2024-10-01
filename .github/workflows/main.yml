@@ -37,15 +37,15 @@ jobs:
       matrix:
         include:
           - name: "Linux Debug"
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             mode: Debug
-            compiler: gcc-10
+            compiler: gcc-11
           - name: "macOS Debug"
-            os: macOS-10.15
+            os: macOS-latest
             mode: Debug
             compiler: apple-clang
           - name: "Windows Debug"
-            os: windows-2019
+            os: windows-latest
             mode: Debug
             compiler: msvc
 #          - name: "Coverage mode"
