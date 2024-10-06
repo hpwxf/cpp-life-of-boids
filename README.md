@@ -31,39 +31,12 @@ pip3 install conan
 
 ### Configure conan
 
-* For GCC
-  ```
-  conan profile new default --detect
-  conan profile update settings.compiler=gcc default
-  conan profile update settings.compiler.version="${VERSION}" default
-  conan profile update settings.compiler.libcxx=libstdc++11 default
-  export CXX=g++${VERSION} 
-  export CC=gcc${VERSION}
-  ```
-* For Clang
-  ```
-  conan profile new default --detect
-  conan profile update settings.compiler=clang default
-  conan profile update settings.compiler.version="${VERSION}" default
-  conan profile update settings.compiler.libcxx=libstdc++11 default
-  export CXX=clang++${VERSION} 
-  export CC=clang${VERSION}
-  ```
-* For AppleClang
-  ```
-  conan profile new default --detect
-  ```
-* For MSVC
-  ```
-  conan profile new default --detect
-  ```
+conan profile detect
 
-⚠️ : by default `--detect` will set `build_type` to `Release`.
-To define a `Debug` profile, you should use:
+⚠️ : by default it will set `build_type` to `Release`.
 
-```
-conan profile update settings.build_type=Debug <your-profile>
-```
+To define a `Debug` profile, you should edit your profile (in `conan profile path default`) 
+by setting field `settings.build_type` to `Debug`.
 
 ## Build and tests
 
@@ -86,9 +59,9 @@ It will use `CC` and `CXX` environment variables defined before.
 ```
 mkdir build
 cd build
-conan install ..
+conan install .. # you may need to add --build=missing to build locally missing packages
 cmake \
-    -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=${MODE}/generators/conan_toolchain.cmake \
     -DCMAKE_BUILD_TYPE="${MODE}" \
     ..
 cmake --build .
@@ -102,7 +75,7 @@ mkdir build
 cd build
 conan install ..
 cmake \
-    -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake \
     -DCMAKE_GENERATOR_PLATFORM=x64 \
     ..
 cmake --build . --config "${MODE}"

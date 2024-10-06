@@ -6,6 +6,9 @@ if [[ "$DEBUG_CI" == "true" ]]; then
   set -x
 fi
 
+BASEDIR=$(dirname "$0")
+BASEDIR=$(cd "$BASEDIR" && pwd -P)
+
 # Default configuration when used out of travis-ci
 MODE=${MODE:-Debug}
 EXTRA_CMAKE_OPTIONS=${EXTRA_CMAKE_OPTIONS:-}
@@ -14,23 +17,17 @@ export ENABLE_COVERAGE=${ENABLE_COVERAGE:-off}
 export ENABLE_MEMCHECK=${ENABLE_MEMCHECK:-off}
 export ENABLE_STATIC_ANALYSIS=${ENABLE_STATIC_ANALYSIS:-off}
 
-conan profile new default --detect
+conan profile detect
+CONAN_PROFILE_FILE=$(conan profile path default)
+
 case "$COMPILER" in 
   gcc*)
-    conan profile update settings.compiler=gcc default
-    conan profile update settings.compiler.version="${COMPILER#gcc-}" default
-    conan profile update settings.compiler.libcxx=libstdc++11 default
-    export CXX=g++${COMPILER#gcc} 
+    export CXX=g++${COMPILER#gcc}
     export CC=gcc${COMPILER#gcc}
     ;;
   clang*)
-    conan profile update settings.compiler=clang default
-    conan profile update settings.compiler.version="${COMPILER#clang-}" default
-    conan profile update settings.compiler.libcxx=libstdc++11 default
-    export CXX=clang++${COMPILER#clang} 
+    export CXX=clang++${COMPILER#clang}
     export CC=clang${COMPILER#clang}
-    # initially was only for clang ≥ 7
-    # CXXFLAGS="-stdlib=libc++"
     ;;
   apple-clang)
     # conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -46,15 +43,30 @@ case "$COMPILER" in
     ;;
 esac
 
-conan profile update settings.build_type="${MODE}" default
-
+"${BASEDIR}"/update_conan_profile.sh build_type Debug "$CONAN_PROFILE_FILE"
 
 mkdir -p build
 cd build
-# /!\ use profile defined above 
-conan install ..
+# /!\ use profile defined above
+conan install --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True ..
+
+find . -name conan_toolchain.cmake
+
+case "$(uname -s)" in
+  Linux|Darwin)
+    CONAN_TOOLCHAIN="${MODE}"/generators/conan_toolchain.cmake
+    ;;
+  MSYS_NT*|MINGW64_NT*)
+    CONAN_TOOLCHAIN=generators/conan_toolchain.cmake
+    ;;
+ *)
+   echo 'Unknown OS'
+   exit 1
+   ;;
+esac
+
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
+  -DCMAKE_TOOLCHAIN_FILE="${CONAN_TOOLCHAIN}" \
   -DCMAKE_BUILD_TYPE="${MODE}" \
   -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
   -DENABLE_MEMCHECK="${ENABLE_MEMCHECK}" \
