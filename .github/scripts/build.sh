@@ -22,22 +22,12 @@ CONAN_PROFILE_FILE=$(conan profile path default)
 
 case "$COMPILER" in 
   gcc*)
-    # FIXME
-#    conan profile update settings.compiler=gcc default
-#    conan profile update settings.compiler.version="${COMPILER#gcc-}" default
-#    conan profile update settings.compiler.libcxx=libstdc++11 default
-    export CXX=g++${COMPILER#gcc} 
+    export CXX=g++${COMPILER#gcc}
     export CC=gcc${COMPILER#gcc}
     ;;
   clang*)
-    # TODO
-#    conan profile update settings.compiler=clang default
-#    conan profile update settings.compiler.version="${COMPILER#clang-}" default
-#    conan profile update settings.compiler.libcxx=libstdc++11 default
     export CXX=clang++${COMPILER#clang}
     export CC=clang${COMPILER#clang}
-    # initially was only for clang ≥ 7
-    # CXXFLAGS="-stdlib=libc++"
     ;;
   apple-clang)
     # conan profile update settings.compiler.libcxx=libstdc++11 default
