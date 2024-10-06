@@ -57,10 +57,26 @@ esac
 
 mkdir -p build
 cd build
-# /!\ use profile defined above 
-conan install --build=missing ..
+# /!\ use profile defined above
+conan install --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=True ..
+
+find . -name conan_toolchain.cmake
+
+case "$(uname -s)" in
+  Linux|Darwin)
+    CONAN_TOOLCHAIN="${MODE}"/generators/conan_toolchain.cmake
+    ;;
+  MSYS_NT*|MINGW64_NT*)
+    CONAN_TOOLCHAIN=generators/conan_toolchain.cmake
+    ;;
+ *)
+   echo 'Unknown OS'
+   exit 1
+   ;;
+esac
+
 cmake \
-  -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake \
+  -DCMAKE_TOOLCHAIN_FILE="${CONAN_TOOLCHAIN}" \
   -DCMAKE_BUILD_TYPE="${MODE}" \
   -DENABLE_COVERAGE="${ENABLE_COVERAGE}" \
   -DENABLE_MEMCHECK="${ENABLE_MEMCHECK}" \

@@ -27,10 +27,10 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
-  if (key == GLFW_KEY_S  && action == GLFW_PRESS) {
+  if (key == GLFW_KEY_S && action == GLFW_PRESS) {
     std::puts("Export current display");
-    char export_filename[] = "export.png"; 
-    saveImage(export_filename, window);
+    char export_filename[] = "export.png";
+    //    saveImage(export_filename, window);
   }
 }
 
@@ -140,7 +140,8 @@ int main() {
     return vec2{(float)(width * (0.5 + 0.4 * std::cos(t))), (float)(height * (0.5 + 0.4 * std::sin(t)))};
   };
 
-  for (float v = 0; auto& p : points) {
+  float v = 0;
+  for (auto& p : points) {
     v += 1.0;
     p = points::Point{get_pos(v), vec2{}};
   }
@@ -216,14 +217,14 @@ int main() {
 
       glUniformMatrix3fv(transform_location2, 1, GL_FALSE, (const GLfloat*)&transform);
       glBindVertexArray(lines_vertexArray.vertex_array);
-      
+
       std::vector<triangle::Vertex> vertex_data;
       vertex_data.push_back(triangle::Vertex{{0, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
           triangle::Vertex{{static_cast<float>(width), static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(triangle::Vertex{{static_cast<float>(width) / 2, 0}, {1.0, 1.0, 1.0}});
       vertex_data.push_back(
-          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height)/2}, {1.0, 1.0, 1.0}});
+          triangle::Vertex{{static_cast<float>(width) / 2, static_cast<float>(height) / 2}, {1.0, 1.0, 1.0}});
 
       glBufferData(GL_ARRAY_BUFFER, vertex_data.size() * sizeof(triangle::Vertex), vertex_data.data(), GL_STREAM_DRAW);
       glDrawArrays(GL_LINES, 0, vertex_data.size());
